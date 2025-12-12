@@ -320,3 +320,4 @@ function loadPersonalStats() { fetchAPI('getPersonalStats', { name: CACHED_USER 
 function animateValue(id, s, e, d) { const o = document.getElementById(id); if(!o) return; let st = null; const step = (t) => { if (!st) st = t; const p = Math.min((t - st) / d, 1); o.innerHTML = (p < 1 ? Math.floor(p * (e - s) + s) : formatNumber(e)).toLocaleString(); if(p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); }
 function viewUserStats(n, t, r) { Swal.fire({ title: n, text: 'Loading...', showConfirmButton: false }); fetchAPI('getPersonalStats', { name: n }).then(s => Swal.fire({ title: n, html: `Team: ${t}<br>Rank: ${r}<br><br>Day: ${s.day}<br>Week: ${s.week}` })); }
 
+
