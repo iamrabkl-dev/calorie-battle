@@ -1,5 +1,5 @@
 // ============================================
-// ⚠️ ใส่ URL ที่ได้จากการ Deploy Web App ที่นี่
+// ⚠️ อย่าลืมอัปเดต URL ใหม่หลัง Deploy ⚠️
 // ============================================
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxyMC5kINgS53UZ5ACkBSx-0ZU9Lm-m81n2F06_q5rK9Ek9IiMX6bON3gz8wbgxyMKtJg/exec"; 
 
@@ -8,23 +8,17 @@ let CACHED_USER = localStorage.getItem('cb_user_name');
 let CACHED_TEAM = localStorage.getItem('cb_user_team');
 let RANK_THRESHOLDS_CLIENT = []; 
 let WELCOME_MESSAGE = "Calorie Battle is Ready!";
-let UPLOADED_IMAGE_BASE64 = null;
+let UPLOADED_IMAGE_URL = null; // เก็บ URL รูปที่อัปโหลดเสร็จแล้ว
 
-// --- API Helper (หัวใจสำคัญ: ใช้คุยกับ Google Script) ---
+// --- API Helper ---
 async function fetchAPI(action, params = {}, method = 'GET') {
     let url = `${GAS_API_URL}?action=${action}`;
-    
-    // ตั้งค่าเบื้องต้น
-    let options = { 
-        method: method,
-        redirect: "follow", // จำเป็นสำหรับ GAS
-    };
+    let options = { method: method, redirect: "follow" };
 
     if (method === 'GET') {
         const queryParams = new URLSearchParams(params).toString();
         if(queryParams) url += `&${queryParams}`;
     } else if (method === 'POST') {
-        // เทคนิคสำคัญ: ส่งเป็น text/plain เพื่อหลบ CORS Policy
         options.body = JSON.stringify({ action: action, payload: params });
         options.headers = { "Content-Type": "text/plain;charset=utf-8" };
     }
@@ -32,63 +26,36 @@ async function fetchAPI(action, params = {}, method = 'GET') {
     try {
         const response = await fetch(url, options);
         const text = await response.text();
-        
-        // พยายามแปลงเป็น JSON
         let json;
-        try {
-            json = JSON.parse(text);
-        } catch (e) {
-            // ถ้าไม่ใช่ JSON แสดงว่าเป็น HTML Error Page จาก Google (มักเกิดจากสิทธิ์ผิด)
-            console.error("Server Response Error:", text);
-            throw new Error("Server ไม่ได้ตอบกลับเป็น JSON (อาจลืมเปิดสิทธิ์ Anyone หรือ URL ผิด)");
-        }
-
-        // เช็คว่ามี error จากฝั่ง logic script ไหม
-        if (json.success === false) {
-             throw new Error(json.error || "Unknown Server Error");
-        }
-
+        try { json = JSON.parse(text); } catch (e) { throw new Error("Server Error: ตอบกลับไม่ใช่ JSON"); }
+        if (json.success === false) throw new Error(json.error || "Unknown Server Error");
         return json;
     } catch (e) {
-        console.error("API Error:", e);
-        Swal.fire({
-            title: 'Connection Error',
-            html: `ไม่สามารถติดต่อ Server ได้<br><small style="color:red">${e.message}</small>`,
-            icon: 'error'
-        });
+        Swal.fire({ title: 'Connection Error', html: `ไม่สามารถติดต่อ Server ได้<br><small style="color:red">${e.message}</small>`, icon: 'error' });
         throw e;
     }
 }
 
 // --- Main Logic ---
-
 document.addEventListener('DOMContentLoaded', () => {
     createSnow(); 
     updateHeaderBadge();
-    
-    // โหลด Config
     fetchAPI('getConfig').then(data => {
         WELCOME_MESSAGE = data.welcomeMessage;
         showWelcomeAndStartLoad();
-    }).catch(err => {
-        console.warn("Config load failed, using default.");
-        showWelcomeAndStartLoad();
-    });
+    }).catch(() => showWelcomeAndStartLoad());
 });
 
-// ฟังก์ชันแปลงตัวเลขให้สวยงาม
 function formatNumber(num) {
-    num = Number(num);
-    const absNum = Math.abs(num);
-    if (absNum >= 1000000) return (num / 1000000).toFixed(2) + 'M'; 
-    if (absNum >= 1000) return (num / 1000).toFixed(2) + 'k'; 
+    num = Number(num); const abs = Math.abs(num);
+    if (abs >= 1000000) return (num / 1000000).toFixed(2) + 'M'; 
+    if (abs >= 1000) return (num / 1000).toFixed(2) + 'k'; 
     return num.toFixed(2); 
 }
 
-// สร้างหิมะ
 function createSnow() {
-    const snowContainer = document.getElementById('snow-container');
-    if(!snowContainer) return;
+    const container = document.getElementById('snow-container');
+    if(!container) return;
     for (let i = 0; i < 30; i++) {
         const flake = document.createElement('div');
         flake.classList.add('snowflake');
@@ -98,7 +65,7 @@ function createSnow() {
         flake.style.animationDuration = `${Math.random() * 15 + 5}s`;
         flake.style.animationDelay = `${Math.random() * 10}s`;
         flake.style.animationName = 'fall'; 
-        snowContainer.appendChild(flake);
+        container.appendChild(flake);
     }
 }
 
@@ -113,34 +80,26 @@ function showWelcomeAndStartLoad() {
 function simulateInitialLoad() {
     let progress = 0;
     const appContent = document.getElementById('app-content');
-    
     appContent.innerHTML = `
         <div class="text-center mt-5 pt-5 fade-up">
             <div class="loading-bar-container mx-auto mt-4" style="width: 80%; max-width: 300px; height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
-                <div id="simulatedProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--red-muaythai), var(--blue-muaythai)); transition: width 0.1s linear;"></div>
+                <div id="simulatedProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #D93026, #1A73E8); transition: width 0.1s linear;"></div>
             </div>
             <p class="mt-3 text-secondary fw-bold fs-4" id="loadingPercentage">0%</p>
         </div>`;
-
     const bar = document.getElementById('simulatedProgressBar');
     const txt = document.getElementById('loadingPercentage');
-    
     const interval = setInterval(() => {
-        progress += 5; // โหลดเร็วๆ
-        if (progress >= 100) {
-            clearInterval(interval);
-            switchTab('dashboard'); 
-        }
+        progress += 5; 
+        if (progress >= 100) { clearInterval(interval); switchTab('dashboard'); }
         if(bar) bar.style.width = `${progress}%`;
         if(txt) txt.innerText = `${progress}%`;
     }, 50);
 }
 
-// --- Navigation & switchTab (สำคัญ: ประกาศให้ Global) ---
 window.switchTab = function(tabName) {
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     showLoading('กำลังโหลด...');
-
     if (tabName === 'dashboard') {
         if(document.querySelector('.nav-item:nth-child(1)')) document.querySelector('.nav-item:nth-child(1)').classList.add('active');
         loadDashboard();
@@ -235,56 +194,6 @@ function showLandingPage() {
         </div></div></div>`;
 }
 
-function loadRecordForm() {
-    if (!CACHED_USER) { Swal.fire('เตือน', 'กรุณาลงทะเบียนก่อน', 'warning').then(() => switchTab('register')); return; }
-    UPLOADED_IMAGE_BASE64 = null;
-    document.getElementById('app-content').innerHTML = `<div class="fade-up"><div class="card-custom"><h4 class="fw-bold text-center mb-4">ส่งผลการฝึกซ้อม</h4><form id="recordForm">
-        <div class="bg-light p-3 rounded-4 mb-4 d-flex justify-content-between align-items-center shadow-sm"><div><strong class="text-dark fs-5">${CACHED_USER}</strong></div><span class="badge bg-secondary rounded-pill px-3 py-2 shadow-sm">${CACHED_TEAM}</span></div>
-        <div class="mb-4"><div class="card border-0 bg-light rounded-4 p-3 text-center" style="border: 2px dashed #ccc !important; cursor: pointer;" onclick="document.getElementById('recFile').click()">
-            <div id="uploadPlaceholder"><i class="bi bi-cloud-arrow-up-fill text-secondary fs-1"></i><p class="text-muted small">เลือกรูปภาพ</p></div>
-            <div id="uploadProgress" style="display:none;"><div class="spinner-border text-primary"></div></div>
-            <div id="uploadSuccess" style="display:none;"><img id="previewImg" src="" class="mt-2 rounded-3 shadow-sm" style="max-height: 100px;"></div>
-        </div><input type="file" id="recFile" accept="image/*" style="display:none;" onchange="handleFileSelect(this)"></div>
-        <div class="mb-4"><input type="number" class="form-control form-control-lg rounded-4 text-center" id="recCalories" placeholder="0 kcal" required disabled style="font-size:2rem; height: 70px;"></div>
-        <button type="submit" id="submitBtn" class="btn w-100 py-3 rounded-pill text-white fw-bold shadow-sm" style="background: #ccc; border:none;" disabled>รอรูปภาพ...</button>
-    </form></div></div>`;
-    document.getElementById('recordForm').addEventListener('submit', handleRecordSubmit);
-}
-
-function handleFileSelect(input) {
-    const file = input.files[0]; if (!file) return;
-    document.getElementById('uploadPlaceholder').style.display = 'none';
-    document.getElementById('uploadProgress').style.display = 'block';
-    const reader = new FileReader();
-    reader.onload = function(e) { 
-        const img = new Image(); img.src = e.target.result; 
-        img.onload = function() { 
-            const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); 
-            const MAX = 1000; let w = img.width, h = img.height; 
-            if (w > h) { if (w > MAX) { h *= MAX/w; w = MAX; } } else { if (h > MAX) { w *= MAX/h; h = MAX; } } 
-            canvas.width = w; canvas.height = h; ctx.drawImage(img, 0, 0, w, h); 
-            UPLOADED_IMAGE_BASE64 = { base64Data: canvas.toDataURL(file.type, 0.7).split(',')[1], mimeType: file.type, fileName: file.name };
-            document.getElementById('uploadProgress').style.display = 'none';
-            document.getElementById('uploadSuccess').style.display = 'block';
-            document.getElementById('previewImg').src = canvas.toDataURL(file.type, 0.7);
-            document.getElementById('recCalories').disabled = false;
-            document.getElementById('submitBtn').disabled = false;
-            document.getElementById('submitBtn').style.background = 'linear-gradient(90deg, #D93026, #1A73E8)';
-            document.getElementById('submitBtn').innerHTML = 'ยืนยันส่งผล';
-        } 
-    }; reader.readAsDataURL(file);
-}
-
-function handleRecordSubmit(e) { 
-    e.preventDefault(); 
-    const btn = document.getElementById('submitBtn'); btn.disabled = true; btn.innerHTML = 'กำลังส่ง...'; 
-    fetchAPI('saveRecord', { name: CACHED_USER, team: CACHED_TEAM, calories: document.getElementById('recCalories').value, ...UPLOADED_IMAGE_BASE64 }, 'POST')
-    .then(res => {
-        if(res.success) { Swal.fire('สำเร็จ!', 'ส่งผลเรียบร้อย', 'success').then(() => switchTab('dashboard')); confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } }); }
-        else Swal.fire('Error', res.error, 'error');
-    }).finally(() => btn.disabled = false);
-}
-
 function loadRegisterForm() {
     document.getElementById('app-content').innerHTML = `<div class="fade-up"><div class="card-custom"><h4 class="fw-bold text-center mb-4">ลงทะเบียน</h4><form id="regForm">
         <div class="mb-3"><input type="text" class="form-control form-control-lg rounded-4" name="name" placeholder="ชื่อเรียก" required></div>
@@ -314,12 +223,173 @@ function goToRecordAsExisting() {
     });
 }
 
+// --- Record / Upload Functions (NEW LOGIC) ---
+function loadRecordForm() {
+    if (!CACHED_USER) { Swal.fire('เตือน', 'กรุณาลงทะเบียนก่อน', 'warning').then(() => switchTab('register')); return; }
+    UPLOADED_IMAGE_URL = null; // Reset ค่า
+    
+    document.getElementById('app-content').innerHTML = `
+    <div class="fade-up">
+        <div class="card-custom">
+            <h4 class="fw-bold text-center mb-4">ส่งผลการฝึกซ้อม</h4>
+            <form id="recordForm">
+                <div class="bg-light p-3 rounded-4 mb-4 d-flex justify-content-between align-items-center shadow-sm">
+                    <div><strong class="text-dark fs-5">${CACHED_USER}</strong></div>
+                    <span class="badge bg-secondary rounded-pill px-3 py-2 shadow-sm">${CACHED_TEAM}</span>
+                </div>
+
+                <div class="mb-4">
+                    <div class="card border-0 bg-light rounded-4 p-3 text-center position-relative" style="border: 2px dashed #ccc !important; cursor: pointer;" onclick="if(!document.getElementById('uploadProgressBar')) document.getElementById('recFile').click()">
+                        
+                        <div id="uploadPlaceholder">
+                            <i class="bi bi-cloud-arrow-up-fill text-secondary fs-1"></i>
+                            <p class="text-muted small">แตะเพื่ออัปโหลดรูป</p>
+                        </div>
+
+                        <div id="uploadProgressContainer" style="display:none;" class="mt-3">
+                            <div class="progress" style="height: 20px; border-radius: 10px;">
+                                <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%">0%</div>
+                            </div>
+                            <small class="text-muted mt-1 d-block">กำลังอัปโหลดรูปภาพ...</small>
+                        </div>
+
+                        <div id="uploadSuccess" style="display:none;">
+                            <img id="previewImg" src="" class="mt-2 rounded-3 shadow-sm" style="max-height: 150px; width: auto;">
+                            <div class="mt-2 text-success fw-bold"><i class="bi bi-check-circle-fill"></i> อัปโหลดเรียบร้อย</div>
+                        </div>
+
+                    </div>
+                    <input type="file" id="recFile" accept="image/*" style="display:none;" onchange="handleFileSelect(this)">
+                </div>
+
+                <div class="mb-4">
+                    <input type="number" class="form-control form-control-lg rounded-4 text-center" id="recCalories" placeholder="0 kcal" required disabled style="font-size:2rem; height: 70px;">
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn w-100 py-3 rounded-pill text-white fw-bold shadow-sm" style="background: #ccc; border:none;" disabled>
+                    กรุณาอัปโหลดรูปก่อน
+                </button>
+            </form>
+        </div>
+    </div>`;
+    
+    document.getElementById('recordForm').addEventListener('submit', handleRecordSubmit);
+}
+
+function handleFileSelect(input) {
+    const file = input.files[0]; 
+    if (!file) return;
+
+    // 1. เริ่มแสดง Progress Bar
+    document.getElementById('uploadPlaceholder').style.display = 'none';
+    document.getElementById('uploadProgressContainer').style.display = 'block';
+    
+    const progressBar = document.getElementById('uploadProgressBar');
+    let progress = 0;
+    
+    // ตั้งค่าเริ่มต้น 5%
+    progressBar.style.width = '5%'; progressBar.innerText = '5%';
+
+    const reader = new FileReader();
+    reader.onload = function(e) { 
+        const img = new Image(); img.src = e.target.result; 
+        img.onload = function() { 
+            // ย่อรูปก่อนส่ง (Client-side Resize)
+            const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); 
+            const MAX = 1000; let w = img.width, h = img.height; 
+            if (w > h) { if (w > MAX) { h *= MAX/w; w = MAX; } } else { if (h > MAX) { w *= MAX/h; h = MAX; } } 
+            canvas.width = w; canvas.height = h; ctx.drawImage(img, 0, 0, w, h); 
+            
+            const base64Data = canvas.toDataURL(file.type, 0.7).split(',')[1];
+            
+            // 2. จำลองการโหลด (Fake Progress) ระหว่างรอเซิร์ฟเวอร์ตอบกลับ
+            progressBar.style.width = '30%'; progressBar.innerText = '30%';
+            
+            let uploadSim = setInterval(() => {
+                if(progress < 90) {
+                    progress += Math.random() * 15;
+                    if(progress > 90) progress = 90; // หยุดที่ 90% จนกว่าจะเสร็จจริง
+                    progressBar.style.width = `${Math.round(progress)}%`;
+                    progressBar.innerText = `${Math.round(progress)}%`;
+                }
+            }, 300);
+
+            // ส่งข้อมูลไปอัปโหลดที่ GAS (Action: uploadImage)
+            fetchAPI('uploadImage', { 
+                base64Data: base64Data, 
+                mimeType: file.type, 
+                fileName: file.name 
+            }, 'POST')
+            .then(res => {
+                clearInterval(uploadSim);
+                if(res.success) {
+                    // 3. อัปโหลดเสร็จสมบูรณ์ (100%)
+                    progressBar.style.width = '100%'; 
+                    progressBar.innerText = '100%';
+                    progressBar.classList.remove('progress-bar-animated');
+                    
+                    setTimeout(() => {
+                        document.getElementById('uploadProgressContainer').style.display = 'none';
+                        document.getElementById('uploadSuccess').style.display = 'block';
+                        document.getElementById('previewImg').src = res.imageUrl; 
+                        
+                        UPLOADED_IMAGE_URL = res.imageUrl; // เก็บ URL รูปจริง
+
+                        // ปลดล็อกปุ่ม Submit และช่องกรอก Calories
+                        document.getElementById('recCalories').disabled = false;
+                        const btn = document.getElementById('submitBtn');
+                        btn.disabled = false;
+                        btn.style.background = 'linear-gradient(90deg, #D93026, #1A73E8)';
+                        btn.innerHTML = 'บันทึกคะแนน';
+                    }, 500);
+                } else {
+                    throw new Error(res.error);
+                }
+            })
+            .catch(err => {
+                clearInterval(uploadSim);
+                document.getElementById('uploadProgressContainer').style.display = 'none';
+                document.getElementById('uploadPlaceholder').style.display = 'block';
+                Swal.fire('Upload Failed', err.message, 'error');
+            });
+        } 
+    }; 
+    reader.readAsDataURL(file);
+}
+
+function handleRecordSubmit(e) { 
+    e.preventDefault(); 
+    if(!UPLOADED_IMAGE_URL) { Swal.fire('Error', 'ไม่พบรูปภาพ กรุณาอัปโหลดใหม่', 'error'); return; }
+
+    const btn = document.getElementById('submitBtn'); 
+    btn.disabled = true; 
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> กำลังบันทึก...'; 
+    
+    // ส่ง URL รูปภาพและ Calories ไปบันทึก (Action: saveRecord)
+    fetchAPI('saveRecord', { 
+        name: CACHED_USER, 
+        team: CACHED_TEAM, 
+        calories: document.getElementById('recCalories').value, 
+        imageUrl: UPLOADED_IMAGE_URL 
+    }, 'POST')
+    .then(res => {
+        if(res.success) { 
+            Swal.fire({
+                title: 'บันทึกสำเร็จ!', text: 'ส่งผลเรียบร้อยแล้ว', icon: 'success',
+                timer: 2000, showConfirmButton: false
+            }).then(() => switchTab('dashboard')); 
+            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } }); 
+        }
+        else Swal.fire('Error', res.error, 'error');
+    }).finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = 'บันทึกคะแนน';
+    });
+}
+
+// --- Utility Functions ---
 function clearCache() { localStorage.clear(); CACHED_USER = null; updateHeaderBadge(); showLandingPage(); }
 function updateHeaderBadge() { document.getElementById('headerUserBadge').style.display = CACHED_USER ? 'block' : 'none'; document.getElementById('headerUserBadge').innerHTML = CACHED_USER ? `<span class="badge bg-dark shadow-sm px-3 py-2">${CACHED_USER}</span>` : ''; }
 function loadPersonalStats() { fetchAPI('getPersonalStats', { name: CACHED_USER }).then(s => { if(document.getElementById('statWeek')) { animateValue("statDay", 0, s.day, 1000); animateValue("statWeek", 0, s.week, 1000); animateValue("statMonth", 0, s.month, 1000); } }); }
 function animateValue(id, s, e, d) { const o = document.getElementById(id); if(!o) return; let st = null; const step = (t) => { if (!st) st = t; const p = Math.min((t - st) / d, 1); o.innerHTML = (p < 1 ? Math.floor(p * (e - s) + s) : formatNumber(e)).toLocaleString(); if(p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); }
 function viewUserStats(n, t, r) { Swal.fire({ title: n, text: 'Loading...', showConfirmButton: false }); fetchAPI('getPersonalStats', { name: n }).then(s => Swal.fire({ title: n, html: `Team: ${t}<br>Rank: ${r}<br><br>Day: ${s.day}<br>Week: ${s.week}` })); }
-
-
-
-
