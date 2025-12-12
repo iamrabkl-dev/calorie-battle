@@ -3,11 +3,10 @@
 // ============================================
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxyMC5kINgS53UZ5ACkBSx-0ZU9Lm-m81n2F06_q5rK9Ek9IiMX6bON3gz8wbgxyMKtJg/exec"; 
 
-// Global Variables
 let CACHED_USER = localStorage.getItem('cb_user_name');
 let CACHED_TEAM = localStorage.getItem('cb_user_team');
 let WELCOME_MESSAGE = "Calorie Battle is Ready!";
-let UPLOADED_IMAGE_URL = null; // ตัวแปรเก็บ URL รูปจริง
+let UPLOADED_IMAGE_URL = null; // เก็บ URL รูปที่อัปโหลดเสร็จแล้ว
 
 async function fetchAPI(action, params = {}, method = 'GET') {
     let url = `${GAS_API_URL}?action=${action}`;
@@ -40,7 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }).catch(() => showWelcomeAndStartLoad());
 });
 
-// ... ส่วนสร้างหิมะ (ใช้โค้ดเดิมหรือก็อปส่วนนี้ไปวางต่อท้าย) ...
 function showWelcomeAndStartLoad() {
     let progress = 0;
     const appContent = document.getElementById('app-content');
@@ -71,10 +69,10 @@ window.switchTab = function(tabName) {
 
 function showLoading(text) { document.getElementById('app-content').innerHTML = `<div class="text-center mt-5 pt-5"><div class="spinner-border text-danger"></div><p class="mt-2 text-secondary">${text}</p></div>`; }
 
-// --- Record Form Logic ---
+// --- Record Form & Mobile Upload Logic ---
 function loadRecordForm() {
     if (!CACHED_USER) { Swal.fire('เตือน', 'กรุณาลงทะเบียนก่อน', 'warning').then(() => switchTab('register')); return; }
-    UPLOADED_IMAGE_URL = null; // Reset ค่า
+    UPLOADED_IMAGE_URL = null; 
     
     document.getElementById('app-content').innerHTML = `
     <div class="fade-up"><div class="card-custom">
@@ -107,21 +105,21 @@ function handleFileSelect(input) {
     document.getElementById('uploadProgressContainer').style.display = 'block';
     const progressBar = document.getElementById('uploadProgressBar');
     
-    progressBar.style.width = '10%'; progressBar.innerText = '10%'; // เริ่มต้น
+    progressBar.style.width = '10%'; progressBar.innerText = '10%'; 
 
     const reader = new FileReader();
     reader.onload = function(e) { 
         const img = new Image(); img.src = e.target.result; 
         img.onload = function() { 
             const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); 
-            const MAX = 1000; let w = img.width, h = img.height; 
+            const MAX = 800; // ลดลงเล็กน้อยเพื่อความเสถียรบนมือถือ
+            let w = img.width, h = img.height; 
             if (w > h) { if (w > MAX) { h *= MAX/w; w = MAX; } } else { if (h > MAX) { w *= MAX/h; h = MAX; } } 
             canvas.width = w; canvas.height = h; ctx.drawImage(img, 0, 0, w, h); 
             
             const base64Data = canvas.toDataURL(file.type, 0.7).split(',')[1];
             progressBar.style.width = '40%'; progressBar.innerText = '40%';
 
-            // ส่งรูปไปอัปโหลดทันที!
             fetchAPI('uploadImage', { base64Data: base64Data, mimeType: file.type, fileName: file.name }, 'POST')
             .then(res => {
                 if(res.success) {
@@ -130,8 +128,7 @@ function handleFileSelect(input) {
                         document.getElementById('uploadProgressContainer').style.display = 'none';
                         document.getElementById('uploadSuccess').style.display = 'block';
                         document.getElementById('previewImg').src = res.imageUrl; 
-                        UPLOADED_IMAGE_URL = res.imageUrl; // เก็บ URL รูป
-                        // เปิดปุ่ม Submit
+                        UPLOADED_IMAGE_URL = res.imageUrl; 
                         document.getElementById('recCalories').disabled = false;
                         const btn = document.getElementById('submitBtn');
                         btn.disabled = false;
@@ -160,12 +157,14 @@ function handleRecordSubmit(e) {
     }).finally(() => { btn.disabled = false; btn.innerHTML = 'บันทึกคะแนน'; });
 }
 
-// ... ฟังก์ชันอื่น (Dashboard, Register, Helper) ให้คงไว้เหมือนเดิม หรือก๊อปจากคำตอบก่อนหน้า ...
+// ... ฟังก์ชันอื่น (Dashboard, Register, Helper) ให้คงไว้เหมือนเดิม ...
 function loadDashboard() { fetchAPI('getDashboard').then(data => { renderDashboard(data); }); }
-function renderDashboard(data) { /* โค้ดแสดงผล Dashboard */ 
-    document.getElementById('app-content').innerHTML = '<div class="text-center pt-5"><h3>Dashboard Loaded</h3></div>'; // ตัวอย่างย่อ
+function renderDashboard(data) { 
+     // (นำโค้ด Dashboard เดิมมาใส่ตรงนี้ หรือใช้โค้ดจาก Script เก่า)
+     document.getElementById('app-content').innerHTML = `<div class="fade-up"><div class="card-custom text-center"><h3 class="fw-bold">Leaderboard</h3><p>Team A: ${data.teamA} vs Team B: ${data.teamB}</p></div></div>`;
 }
-function showLandingPage() { /* โค้ดหน้าแรก */ 
-    document.getElementById('app-content').innerHTML = '<div class="text-center pt-5"><button class="btn btn-primary" onclick="localStorage.setItem(\'cb_user_name\', \'TestUser\'); location.reload();">Login Test</button></div>';
+function showLandingPage() { 
+    document.getElementById('app-content').innerHTML = '<div class="text-center pt-5"><button class="btn btn-primary" onclick="loadRegisterForm()">ลงทะเบียน</button></div>';
 }
+function loadRegisterForm() { /* โค้ดลงทะเบียนเดิม */ }
 function updateHeaderBadge() { document.getElementById('headerUserBadge').style.display = CACHED_USER ? 'block' : 'none'; document.getElementById('headerUserBadge').innerHTML = CACHED_USER || ''; }
