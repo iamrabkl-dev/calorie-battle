@@ -1,6 +1,6 @@
 // --- CONFIGURATION ---
 // ⚠️ นำ Web App URL ที่ได้จากข้อ 1 มาใส่ตรงนี้
-const GAS_API_URL = "วาง_WEB_APP_URL_ของคุณที่นี่"; 
+const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxbAxrDl1kDqT6_F0_nUpX2Ca9rl3CUp0vr32Ev7pbtPAAxgi-tB8mChdex5uDuLmpMGg/exec"; 
 
 // Global Variables
 let CACHED_USER = localStorage.getItem('cb_user_name');
@@ -523,4 +523,5 @@ function viewUserStats(name, team, rank) {
     fetchAPI('getPersonalStats', { name: name }).then(stats => {
         Swal.fire({ title: name, html: `Team: ${team}<br>Rank: ${rank}<br><br>Day: ${stats.day}<br>Week: ${stats.week}<br>Month: ${stats.month}` });
     });
+
 }
