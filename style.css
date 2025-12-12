@@ -1,13 +1,9 @@
 :root {
     --font-main: 'Kanit', sans-serif;
-    --color-team-a: #ff4757;
-    --color-team-b: #1e90ff;
-    --bg-body: #f1f2f6;
     --red-muaythai: #D93026;
     --blue-muaythai: #1A73E8;
+    --bg-body: #f1f2f6;
 }
-
-/* Utility Classes */
 .text-red-muaythai { color: var(--red-muaythai) !important; }
 .text-blue-muaythai { color: var(--blue-muaythai) !important; }
 .bg-red-muaythai { background-color: var(--red-muaythai) !important; color: white; }
@@ -18,116 +14,47 @@ body {
     background-color: var(--bg-body);
     color: #2f3542;
     padding-bottom: 90px;
-    -webkit-font-smoothing: antialiased;
     font-size: 16px;
 }
-
-/* Header */
 .header-bar {
     background: rgba(255,255,255,0.95);
     backdrop-filter: blur(10px);
     padding: 15px 20px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.04);
     position: sticky; top: 0; z-index: 1000;
-    border-bottom-left-radius: 25px;
-    border-bottom-right-radius: 25px;
+    border-bottom-left-radius: 25px; border-bottom-right-radius: 25px;
 }
-
-/* Cards */
 .card-custom {
-    background: white;
-    border-radius: 24px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-    padding: 25px;
-    margin-bottom: 25px;
-    border: none;
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.2s;
+    background: white; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    padding: 25px; margin-bottom: 25px; border: none; overflow: hidden;
 }
-
 .card-header-text {
-    font-size: 1.25rem; 
-    font-weight: 800;
-    color: #2f3542;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
+    font-size: 1.25rem; font-weight: 800; color: #2f3542; margin-bottom: 20px; display: flex; align-items: center;
 }
-
 .score-big {
-    font-size: 2.7rem; 
-    font-weight: 900;
-    line-height: 1;
-    letter-spacing: -2px;
-    text-shadow: 2px 2px 0px rgba(0,0,0,0.05);
+    font-size: 2.7rem; font-weight: 900; line-height: 1; letter-spacing: -2px; text-shadow: 2px 2px 0px rgba(0,0,0,0.05);
 }
-
-/* Navigation */
 .bottom-nav {
-    position: fixed; bottom: 0; left: 0; width: 100%;
-    background: white;
-    height: 80px; 
+    position: fixed; bottom: 0; left: 0; width: 100%; background: white; height: 80px;
     display: flex; justify-content: space-around; align-items: center;
-    box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
-    z-index: 999;
-    border-top-left-radius: 30px;
-    border-top-right-radius: 30px;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.05); z-index: 999;
+    border-top-left-radius: 30px; border-top-right-radius: 30px;
 }
 .nav-item {
-    text-align: center; color: #b2bec3;
-    font-size: 0.8rem; cursor: pointer;
-    width: 80px; position: relative;
-    transition: all 0.3s;
-    font-weight: 600;
+    text-align: center; color: #b2bec3; font-size: 0.8rem; cursor: pointer; width: 80px; position: relative; font-weight: 600;
 }
 .nav-item.active { color: #2f3542; font-weight: 800; transform: translateY(-3px); }
 .nav-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
-
 .nav-record-btn {
-    background: linear-gradient(135deg, #ff6b6b, #ee5253);
-    width: 65px; height: 65px;
-    border-radius: 50%;
-    color: white;
-    display: flex; justify-content: center; align-items: center;
-    position: absolute;
-    top: -40px; left: 50%; transform: translateX(-50%);
-    border: 6px solid white;
-    box-shadow: 0 8px 20px rgba(238, 82, 83, 0.5);
+    background: linear-gradient(135deg, #ff6b6b, #ee5253); width: 65px; height: 65px; border-radius: 50%; color: white;
+    display: flex; justify-content: center; align-items: center; position: absolute; top: -40px; left: 50%; transform: translateX(-50%);
+    border: 6px solid white; box-shadow: 0 8px 20px rgba(238, 82, 83, 0.5);
 }
-
-/* Leaderboard */
-.leaderboard-item {
-    cursor: pointer;
-    transition: background-color 0.2s;
-    border-radius: 12px;
-    padding: 10px;
-}
-.leaderboard-item:hover {
-    background-color: #f8f9fa;
-}
-
-/* Inputs */
-input.form-control, textarea.form-control, select.form-select { 
-    color: #2f3542 !important; 
-    background-color: white !important; 
-    border: 1px solid #ced4da !important;
-    font-size: 1.1rem; 
-}
-
-/* Snowfall */
-.snow {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999;
-}
-.snowflake {
-  position: absolute; 
-  background: #FFFFFF; 
-  border-radius: 50%; 
-  opacity: 0.8; 
-  animation: fall linear infinite;
-}
+.leaderboard-item { cursor: pointer; transition: background-color 0.2s; border-radius: 12px; padding: 10px; }
+.leaderboard-item:hover { background-color: #f8f9fa; }
+input.form-control, textarea.form-control, select.form-select { color: #2f3542 !important; background-color: white !important; border: 1px solid #ced4da !important; font-size: 1.1rem; }
+.snow { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+.snowflake { position: absolute; background: #FFFFFF; border-radius: 50%; opacity: 0.8; animation: fall linear infinite; }
 @keyframes fall { to { transform: translateY(100vh); } }
-
-/* Animations */
 .fade-up { animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(20px); }
 @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
