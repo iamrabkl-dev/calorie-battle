@@ -1,7 +1,7 @@
 // ============================================
 // ⚠️ ใส่ URL ที่ได้จากการ Deploy Web App ที่นี่
 // ============================================
-const GAS_API_URL = "https://script.google.com/macros/library/d/1yGu6dmkAzE5d7LF-yXeVt1CXoFX6_0iKcBdk-X4zD8coMdkY6VFRg4Sy/45"; 
+const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxjBYFVuTSfTA8V_0LBheDGD6ZyFkI1D8VXWFcrui9YlxerXBn_a0P9xZwBVgWUr_EQXQ/exec"; 
 
 // Global Variables
 let CACHED_USER = localStorage.getItem('cb_user_name');
@@ -319,3 +319,4 @@ function updateHeaderBadge() { document.getElementById('headerUserBadge').style.
 function loadPersonalStats() { fetchAPI('getPersonalStats', { name: CACHED_USER }).then(s => { if(document.getElementById('statWeek')) { animateValue("statDay", 0, s.day, 1000); animateValue("statWeek", 0, s.week, 1000); animateValue("statMonth", 0, s.month, 1000); } }); }
 function animateValue(id, s, e, d) { const o = document.getElementById(id); if(!o) return; let st = null; const step = (t) => { if (!st) st = t; const p = Math.min((t - st) / d, 1); o.innerHTML = (p < 1 ? Math.floor(p * (e - s) + s) : formatNumber(e)).toLocaleString(); if(p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); }
 function viewUserStats(n, t, r) { Swal.fire({ title: n, text: 'Loading...', showConfirmButton: false }); fetchAPI('getPersonalStats', { name: n }).then(s => Swal.fire({ title: n, html: `Team: ${t}<br>Rank: ${r}<br><br>Day: ${s.day}<br>Week: ${s.week}` })); }
+
